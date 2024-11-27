@@ -13,42 +13,6 @@ from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 import os
 
-# Caricare dataset
-df_csv = pd.read_csv('hotel_bookings.csv')
-
-# Funzione per mappare i mesi alle stagioni
-def map_season(month):
-    if month in ['December', 'January', 'February']:
-        return 'Winter'
-    elif month in ['March', 'April', 'May']:
-        return 'Spring'
-    elif month in ['June', 'July', 'August']:
-        return 'Summer'
-    elif month in ['September', 'October', 'November']:
-        return 'Autumn'
-    else:
-        return None
-
-# Verifica e conversione di arrival_date_month
-if 'arrival_date_month' in df_csv.columns:
-    months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ]
-    df_csv['arrival_date_month'] = df_csv['arrival_date_month'].apply(lambda x: months[int(x) - 1] if str(x).isdigit() else x)
-    df_csv['season'] = df_csv['arrival_date_month'].map(map_season)
-else:
-    st.error("La colonna 'arrival_date_month' non esiste nel dataset.")
-    st.stop()
-
-# Filtro per stagione
-season_filter = st.sidebar.selectbox("Seleziona la stagione", ['Winter', 'Spring', 'Summer', 'Autumn'])
-if 'season' in df.columns:
-    df_csv = df_csv[df_csv['season'] == season_filter]
-else:
-    st.error("La colonna 'season' non è stata creata correttamente.")
-    st.stop()
-
 # Simuliamo i dati (sostituire con il vostro dataset)
 np.random.seed(0)
 data = {
@@ -216,19 +180,3 @@ st.download_button(
     file_name="report_predizione_adr.pdf",
     mime="application/pdf"
 )
-
-# Sidebar per selezionare la stagione
-st.sidebar.header("🌦️ Filtra per Stagione")
-season_filter = st.sidebar.selectbox("Seleziona la stagione", ['Winter', 'Spring', 'Summer', 'Autumn'])
-if 'season' in df_csv.columns:  # Use df_csv instead of df
-    df_csv = df_csv[df_csv['season'] == season_filter]
-else:
-    st.error("La colonna 'season' non è stata creata correttamente.")
-    st.stop()
-
-# Filtrare il dataset in base alla stagione selezionata
-if season_filter != 'Tutte':
-    df_csv = df_csv[df_csv['season'] == season_filter]
-
-# (Resto del codice rimane invariato)
-
