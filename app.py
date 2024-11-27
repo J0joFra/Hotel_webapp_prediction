@@ -187,8 +187,13 @@ def create_pdf(prediction, mae, r2, plot_image):
 # Crea il grafico come immagine
 plot_image_path = save_plot_image()
 
-# Crea il buffer PDF
-pdf_buffer = create_pdf(prediction, mae, r2, plot_image_path)
+try:
+    pdf_buffer = create_pdf(prediction, mae, r2, plot_image_path)
+    if pdf_buffer is None:
+        raise ValueError("Il buffer PDF è vuoto.")
+except Exception as e:
+    st.error(f"Errore nella creazione del PDF: {e}")
+    pdf_buffer = None
 
 # Verifica se pdf_buffer è stato creato correttamente
 if pdf_buffer:
