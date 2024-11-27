@@ -34,9 +34,11 @@ selected_columns = [
     'adults', 'children', 'babies', 'total_guests', 'adr', 'lead_time'
 ]
 
-# Prepare the data
-X = data[selected_columns]
-y = data['adr']
+# Utilizza un campione dei dati per il training e la visualizzazione
+sampled_data = data.sample(frac=0.5, random_state=0)
+# Preprocessamento e separazione dei dati
+X = sampled_data[selected_columns]
+y = sampled_data['adr']
 
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
