@@ -30,13 +30,13 @@ def map_season(month):
         return None
 
 # Verifica e conversione di arrival_date_month
-if 'arrival_date_month' in df.columns:
+if 'arrival_date_month' in df_csv.columns:
     months = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ]
-    df['arrival_date_month'] = df['arrival_date_month'].apply(lambda x: months[int(x) - 1] if str(x).isdigit() else x)
-    df['season'] = df['arrival_date_month'].map(map_season)
+    df_csv['arrival_date_month'] = df_csv['arrival_date_month'].apply(lambda x: months[int(x) - 1] if str(x).isdigit() else x)
+    df_csv['season'] = df_csv['arrival_date_month'].map(map_season)
 else:
     st.error("La colonna 'arrival_date_month' non esiste nel dataset.")
     st.stop()
@@ -44,7 +44,7 @@ else:
 # Filtro per stagione
 season_filter = st.sidebar.selectbox("Seleziona la stagione", ['Winter', 'Spring', 'Summer', 'Autumn'])
 if 'season' in df.columns:
-    df = df[df['season'] == season_filter]
+    df_csv = df_csv[df_csv['season'] == season_filter]
 else:
     st.error("La colonna 'season' non è stata creata correttamente.")
     st.stop()
