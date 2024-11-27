@@ -226,7 +226,7 @@ season_filter = st.sidebar.selectbox(
 
 # Filtrare il dataset in base alla stagione selezionata
 if season_filter != 'Tutte':
-    df = df[df['season'] == season_filter]
+    df_csv = df_csv[df_csv['season'] == season_filter]
 
 # (Resto del codice rimane invariato)
 
