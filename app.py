@@ -22,7 +22,7 @@ df.fillna(df.mean(), inplace=True)
 df = pd.get_dummies(df, drop_first=True)
 
 # Prepariamo i dati
-X = df.drop('adr')
+X = df.drop()
 y = df['adr']
 
 X = X.copy()
