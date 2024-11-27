@@ -15,7 +15,7 @@ import os
 
 # Simuliamo i dati (sostituire con il vostro dataset)
 np.random.seed(0)
-data = pd.read_csv('Hotel.csv')
+data = pd.read_csv('hotel_bookings.csv')
 df = pd.DataFrame(data)
 
 # Aggiungiamo la colonna "stay_duration"
