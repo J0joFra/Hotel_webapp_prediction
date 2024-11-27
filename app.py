@@ -4,11 +4,12 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
-import plotly.express as px
+import plotly.express as px  # Importiamo Plotly per il grafico interattivo
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 import os
 
@@ -21,7 +22,7 @@ df = pd.DataFrame(data)
 df['stay_duration'] = df['stays_in_week_nights'] + df['stays_in_weekend_nights']
 
 # Codifica della colonna 'hotel' (one-hot encoding)
-hotel_types = pd.get_dummies(df['hotel'], drop_first=True)
+hotel_types = pd.get_dummies(df['hotel'], drop_first=True)  # Dropping the first column to avoid multicollinearity
 df = pd.concat([df, hotel_types], axis=1)
 
 # Prepariamo i dati
@@ -42,14 +43,12 @@ model.fit(X_train, y_train)
 
 # Streamlit UI
 st.title("🎯 Predizione del Prezzo Medio Giornaliero (ADR)")
-st.write(
-    """ 
-    Questa applicazione utilizza un modello di **regressione lineare** per predire il prezzo medio giornaliero di una prenotazione (**ADR**) 
-    basandosi su diversi parametri.
-    """
-)
+st.write(""" 
+Questa applicazione utilizza un modello di **regressione lineare** per predire il prezzo medio giornaliero di una prenotazione (**ADR**) 
+basandosi su diversi parametri.
+""")
 
-# Sidebar per input utente
+# Input utente
 st.sidebar.header("📊 Inserisci i parametri")
 adults = st.sidebar.number_input("Numero di Adulti (max 4)", min_value=1, max_value=4, value=2)
 children = st.sidebar.number_input("Numero di Bambini (max 5)", min_value=0, max_value=5, value=0)
@@ -76,98 +75,97 @@ user_input = pd.DataFrame({
 
 prediction = model.predict(user_input)[0]
 
-# Organizzazione della pagina principale
-col1, col2 = st.columns([2, 1])
-
-# Risultati della predizione
-with col1:
-    st.subheader("🎉 Risultato della Predizione")
-    st.markdown(
-        f"""
-        <div style="background-color:#f0f9ff; padding:20px; border-radius:10px; border: 2px solid #2196f3;">
-            <h2 style="color:#2196f3; text-align:center;">Prezzo Medio Giornaliero Predetto (ADR): <b>{prediction:.2f} €</b></h2>
-            <p><i>Tipo di Hotel: {hotel_type}</i></p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# Risultati
+st.subheader("🎉 Risultato della Predizione")
+st.markdown(
+    f"""
+    <div style="background-color:#f0f9ff; padding:10px; border-radius:10px; border: 2px solid #2196f3;">
+        <h2 style="color:#2196f3; text-align:center;">Prezzo Medio Giornaliero Predetto (ADR): <b>{prediction:.2f} €</b></h2>
+        <p><i>Tipo di Hotel: {hotel_type}</i></p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Metriche del modello
-with col2:
-    st.subheader("📈 Metriche del Modello")
-    y_pred = model.predict(X_test)
-    mae = mean_absolute_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
-    st.markdown(
-        f"""
-        <div style="background-color:#e8f5e9; padding:10px; border-radius:10px; border: 2px solid #43a047;">
-            <p><b>Errore Medio Assoluto (MAE):</b> {mae:.2f}</p>
-            <p><b>Coefficiente di Determinazione (R²):</b> {r2:.2f}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+y_pred = model.predict(X_test)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+st.subheader("📈 Metriche del Modello")
+st.markdown(
+    f"""
+    <div style="background-color:#e8f5e9; padding:10px; border-radius:10px; border: 2px solid #43a047;">
+        <p><b>Errore Medio Assoluto (MAE):</b> {mae:.2f}</p>
+        <p><b>Coefficiente di Determinazione (R²):</b> {r2:.2f}</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Grafico interattivo con Plotly
 st.subheader("📊 Distribuzione delle Predizioni (Grafico Interattivo)")
-fig = px.histogram(
-    y_pred, 
-    nbins=20, 
-    title="Distribuzione delle Predizioni ADR", 
-    labels={"value": "ADR Predetto"}
-)
-fig.add_vline(
-    x=prediction, 
-    line=dict(dash="dash", color="red"), 
-    annotation_text="Valore Utente", 
-    annotation_position="top right"
-)
+fig = px.histogram(y_pred, nbins=20, title="Distribuzione delle Predizioni ADR", labels={"value": "ADR Predetto"})
+fig.add_vline(x=prediction, line=dict(dash="dash", color="red"), annotation_text="Valore Utente", annotation_position="top right")
 st.plotly_chart(fig)
 
-# Funzione per salvare il grafico
-@st.cache_data
+# Funzione per salvare il grafico come immagine con miglioramenti estetici
 def save_plot_image():
-    plot_dir = 'C:/tmp'
+    # Crea la directory se non esiste
+    plot_dir = 'C:\\tmp'
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
-
+    
     plot_image_path = os.path.join(plot_dir, 'prediction_plot.png')
 
+    # Crea il grafico con un tema migliorato
     plt.figure(figsize=(10, 6))
     sns.set(style="whitegrid")
     sns.histplot(y_pred, bins=20, color='royalblue', label='Predizioni ADR', kde=False)
+    # Curva di densità KDE con il colore arancione
     sns.kdeplot(y_pred, color='orange', linewidth=2, label='Curva di densità KDE delle Predizioni ADR')
     plt.axvline(prediction, color='red', linestyle='--', label=f'Valore Utente ({prediction:.2f} €)', linewidth=2)
-    plt.title('Distribuzione delle Predizioni ADR', fontsize=16, fontweight='bold')
+    plt.title('Distribuzione delle Predizioni ADR con il Valore Utente', fontsize=16, fontweight='bold', color='darkblue')
     plt.xlabel('ADR Predetto (€)', fontsize=14)
     plt.ylabel('Frequenza', fontsize=14)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(plot_image_path)
+    plt.savefig(plot_image_path)  # Salva direttamente l'immagine come file PNG
     plt.close()
+    
     return plot_image_path
 
-# Generazione del PDF
+# Funzione per generare il PDF
 def create_pdf(prediction, mae, r2, plot_image):
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=letter)
+    
+    # Titolo del documento
     c.setFont("Helvetica-Bold", 16)
     c.drawString(72, 750, "📊 Report Predizione ADR")
+    
+    # Corpo del documento
     c.setFont("Helvetica", 12)
     c.drawString(72, 730, f"Prezzo Medio Giornaliero Predetto (ADR): {prediction:.2f} €")
     c.drawString(72, 710, f"Errore Medio Assoluto (MAE): {mae:.2f}")
     c.drawString(72, 690, f"Coefficiente di Determinazione (R²): {r2:.2f}")
-    c.drawImage(plot_image, 72, 400, width=450, height=250)
+    
+    # Aggiungi il grafico nel PDF
+    c.drawImage(plot_image, 72, 400, width=450, height=250)  # Posiziona il grafico nel PDF
+    
+    # Salvataggio del PDF
     c.showPage()
     c.save()
+    
     buf.seek(0)
     return buf
 
-# Scarica il report PDF
+# Bottone per scaricare il PDF
 st.subheader("📥 Scarica il Report PDF")
 plot_image = save_plot_image()
 pdf_buffer = create_pdf(prediction, mae, r2, plot_image)
 
+# Crea il link per scaricare il PDF
 st.download_button(
     label="Scarica il Report PDF",
     data=pdf_buffer,
