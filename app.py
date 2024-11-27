@@ -19,9 +19,12 @@ df = pd.DataFrame(data)
 # Aggiungiamo la colonna "stay_duration"
 df['stay_duration'] = df['stays_in_week_nights'] + df['stays_in_weekend_nights']
 
-# Codifica della colonna 'hotel' (one-hot encoding)
-hotel_types = pd.get_dummies(df['hotel'], drop_first=True)  # Dropping the first column to avoid multicollinearity
-df = pd.concat([df, hotel_types], axis=1)
+# Filtra colonne numeriche
+X_numeric = X.select_dtypes(include=[np.number])
+X[X_numeric.columns] = X_numeric.fillna(X_numeric.mean())
+
+# Codifica le colonne categoriche
+X = pd.get_dummies(X, drop_first=True)
 
 # Prepariamo i dati
 X = df[['adults', 'children', 'babies', 'lead_time', 'stay_duration', 'hotel', 
