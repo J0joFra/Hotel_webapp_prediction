@@ -18,7 +18,7 @@ df = pd.DataFrame(data)
 
 # Prepariamo i dati
 X = df[['adults', 'children', 'babies', 'lead_time', 'stay_duration', 'hotel', 
-        'season', 'is_family', 'country_name']]
+        'season', 'country_name']]
 y = df['adr']
 
 # Gestione delle colonne categoriche
