@@ -15,31 +15,18 @@ import os
 
 # Simuliamo i dati (sostituire con il vostro dataset)
 np.random.seed(0)
-data = {
-    'adults': np.random.randint(1, 5, 100),
-    'children': np.random.randint(0, 3, 100),
-    'lead_time': np.random.randint(0, 500, 100),
-    'stays_in_week_nights': np.random.randint(0, 10, 100),
-    'stays_in_weekend_nights': np.random.randint(0, 5, 100),
-    'adr': np.random.randint(50, 300, 100),
-    'hotel': np.random.choice(['City Hotel', 'Resort Hotel'], 100)  # Colonna 'hotel' con City Hotel e Resort Hotel
-}
-df = pd.DataFrame(data)
-
-# Aggiungiamo la colonna "stay_duration"
-df['stay_duration'] = df['stays_in_week_nights'] + df['stays_in_weekend_nights']
+# Caricare dataset
+df = pd.read_csv('Hotel.csv')
 
 # Codifica della colonna 'hotel' (one-hot encoding)
 hotel_types = pd.get_dummies(df['hotel'], drop_first=True)  # Dropping the first column to avoid multicollinearity
 df = pd.concat([df, hotel_types], axis=1)
 
 # Prepariamo i dati
-X = df[['adults', 'children', 'lead_time', 'stay_duration', 'Resort Hotel']]
-y = df['adr']
-
-X = X.copy()
+X = df.drop(columns=['adr'])
 X.fillna(X.mean(), inplace=True)
-y = y.copy()
+
+y = df['adr']
 y.fillna(y.mean(), inplace=True)
 
 # Dividiamo i dati in set di addestramento e test
