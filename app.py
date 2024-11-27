@@ -13,7 +13,7 @@ from reportlab.pdfgen import canvas
 import os
 
 # Simuliamo i dati (sostituire con il vostro dataset)
-data = pd.read_csv('hotel_bookings.csv')
+data = pd.read_csv('Hotel.csv')
 df = pd.DataFrame(data)
 
 # Aggiungiamo la colonna "stay_duration"
