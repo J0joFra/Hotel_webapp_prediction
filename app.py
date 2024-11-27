@@ -184,6 +184,10 @@ def create_pdf(prediction, mae, r2, plot_image):
     buf.seek(0)
     return buf
 
+# Creare il grafico e il PDF
+plot_image_path = save_plot_image()
+pdf_buffer = create_pdf(prediction, mae, r2, plot_image_path)
+
 # Crea il link per scaricare il PDF
 st.download_button(
     label="Scarica il Report PDF",
