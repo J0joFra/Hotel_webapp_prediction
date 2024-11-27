@@ -13,28 +13,16 @@ from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 import os
 
-# Simuliamo i dati (sostituire con il vostro dataset)
-np.random.seed(0)
-data = {
-    'adults': np.random.randint(1, 5, 100),
-    'children': np.random.randint(0, 3, 100),
-    'lead_time': np.random.randint(0, 500, 100),
-    'stays_in_week_nights': np.random.randint(0, 10, 100),
-    'stays_in_weekend_nights': np.random.randint(0, 5, 100),
-    'adr': np.random.randint(50, 300, 100),
-    'hotel': np.random.choice(['City Hotel', 'Resort Hotel'], 100)  # Colonna 'hotel' con City Hotel e Resort Hotel
-}
-df = pd.DataFrame(data)
+df = pd.read_csv('Hotel.csv')
 
-# Aggiungiamo la colonna "stay_duration"
-df['stay_duration'] = df['stays_in_week_nights'] + df['stays_in_weekend_nights']
+# Preprocess the df
+df.fillna(df.mean(), inplace=True)
 
-# Codifica della colonna 'hotel' (one-hot encoding)
-hotel_types = pd.get_dummies(df['hotel'], drop_first=True)  # Dropping the first column to avoid multicollinearity
-df = pd.concat([df, hotel_types], axis=1)
+# One-hot encode categorical columns
+df = pd.get_dummies(df, drop_first=True)
 
 # Prepariamo i dati
-X = df[['adults', 'children', 'lead_time', 'stay_duration', 'Resort Hotel']]
+X = df.drop('adr')
 y = df['adr']
 
 X = X.copy()
@@ -73,7 +61,7 @@ hotel_encoding = {
 }[hotel_type]
 
 # Predizione
-user_input = pd.DataFrame({
+user_input = pd.dfFrame({
     'adults': [adults],
     'children': [children],
     'lead_time': [lead_time],
@@ -176,7 +164,7 @@ pdf_buffer = create_pdf(prediction, mae, r2, plot_image)
 # Crea il link per scaricare il PDF
 st.download_button(
     label="Scarica il Report PDF",
-    data=pdf_buffer,
+    df=pdf_buffer,
     file_name="report_predizione_adr.pdf",
     mime="application/pdf"
 )
