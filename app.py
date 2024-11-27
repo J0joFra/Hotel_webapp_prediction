@@ -21,15 +21,18 @@ df = pd.DataFrame(data)
 # Aggiungiamo la colonna "stay_duration"
 df['stay_duration'] = df['stays_in_week_nights'] + df['stays_in_weekend_nights']
 
-# Codifica one-hot per tutte le colonne categoriche del DataFrame
-categorical_columns = df.select_dtypes(include=['object']).columns
-df = pd.get_dummies(df, columns=categorical_columns, drop_first=True)
-
-df.fillna(df.mean(), inplace=True)
+# Codifica della colonna 'hotel' (one-hot encoding)
+hotel_types = pd.get_dummies(df['hotel'], drop_first=True)  # Dropping the first column to avoid multicollinearity
+df = pd.concat([df, hotel_types], axis=1)
 
 # Prepariamo i dati
-X = df[['adults', 'children', 'lead_time', 'stay_duration', 'Resort Hotel','meal', 'country_name', 'season']]
+X = df[['adults', 'children', 'lead_time', 'stay_duration', 'Resort Hotel']]
 y = df['adr']
+
+X = X.copy()
+X.fillna(X.mean(), inplace=True)
+y = y.copy()
+y.fillna(y.mean(), inplace=True)
 
 # Dividiamo i dati in set di addestramento e test
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
@@ -44,32 +47,6 @@ st.write("""
 Questa applicazione utilizza un modello di **regressione lineare** per predire il prezzo medio giornaliero di una prenotazione (**ADR**) 
 basandosi su diversi parametri.
 """)
-
-# Sezione di filtro
-st.sidebar.header("🌍 Filtri per i Dati")
-seasons = [col.split('_')[-1] for col in df.columns if col.startswith('season_')]
-countries = [col.split('_')[-1] for col in df.columns if col.startswith('country_name_')]
-
-selected_season = st.sidebar.selectbox("Seleziona la Stagione", ['Tutte'] + seasons)
-selected_country = st.sidebar.selectbox("Seleziona il Paese", ['Tutti'] + countries)
-
-# Filtra i dati in base alla selezione dell'utente
-filtered_df = df.copy()
-if selected_season != 'Tutte':
-    filtered_df = filtered_df[filtered_df[f'season_{selected_season}'] == 1]
-if selected_country != 'Tutti':
-    filtered_df = filtered_df[filtered_df[f'country_name_{selected_country}'] == 1]
-
-# Prepariamo i dati
-X = filtered_df[['adults', 'children', 'lead_time', 'stay_duration', 'Resort Hotel']]
-y = filtered_df['adr']
-
-# Dividiamo i dati in set di addestramento e test
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-
-# Addestramento del modello di regressione lineare
-model = LinearRegression()
-model.fit(X_train, y_train)
 
 # Input utente
 st.sidebar.header("📊 Inserisci i parametri")
