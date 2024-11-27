@@ -42,7 +42,7 @@ model = LinearRegression()
 model.fit(X_train, y_train)
 
 # Streamlit UI
-st.title("🎯 GUCCI ")
+st.title("🎯 Predizione del Prezzo Medio Giornaliero (ADR)")
 st.write(""" 
 Questa applicazione utilizza un modello di **regressione lineare** per predire il prezzo medio giornaliero di una prenotazione (**ADR**) 
 basandosi su diversi parametri.
