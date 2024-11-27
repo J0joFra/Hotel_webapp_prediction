@@ -19,12 +19,13 @@ df = pd.DataFrame(data)
 # Aggiungiamo la colonna "stay_duration"
 df['stay_duration'] = df['stays_in_week_nights'] + df['stays_in_weekend_nights']
 
-# Filtra colonne numeriche
+# Codifica delle colonne categoriche
+X = pd.get_dummies(X, drop_first=True)
+
+# Gestione dei valori mancanti
 X_numeric = X.select_dtypes(include=[np.number])
 X[X_numeric.columns] = X_numeric.fillna(X_numeric.mean())
-
-# Codifica le colonne categoriche
-X = pd.get_dummies(X, drop_first=True)
+y.fillna(y.mean(), inplace=True)
 
 # Prepariamo i dati
 X = df[['adults', 'children', 'babies', 'lead_time', 'stay_duration', 'hotel', 
