@@ -219,10 +219,12 @@ st.download_button(
 
 # Sidebar per selezionare la stagione
 st.sidebar.header("🌦️ Filtra per Stagione")
-season_filter = st.sidebar.selectbox(
-    "Seleziona una stagione", 
-    options=['Tutte', 'Inverno', 'Primavera', 'Estate', 'Autunno']
-)
+season_filter = st.sidebar.selectbox("Seleziona la stagione", ['Winter', 'Spring', 'Summer', 'Autumn'])
+if 'season' in df_csv.columns:  # Use df_csv instead of df
+    df_csv = df_csv[df_csv['season'] == season_filter]
+else:
+    st.error("La colonna 'season' non è stata creata correttamente.")
+    st.stop()
 
 # Filtrare il dataset in base alla stagione selezionata
 if season_filter != 'Tutte':
