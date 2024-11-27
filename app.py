@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
-import plotly.express as px  # Importiamo Plotly per il grafico interattivo
+import plotly.express as px  # Import Plotly for interactive plots
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
@@ -12,60 +12,61 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 import os
+from pymongo import MongoClient
 
-# Simuliamo i dati (sostituire con il vostro dataset)
-np.random.seed(0)
-# Caricare dataset
-df = pd.read_csv('Hotel.csv')
+# Connect to MongoDB
+client = MongoClient("mongodb+srv://jofrancalanci:Cf8m2xsQdZgll1hz@element.2o7dxct.mongodb.net/")
+db = client['hotel_db']
+collection = db['hotel_data'] 
 
-# Codifica one-hot per tutte le colonne categoriche del DataFrame
-categorical_columns = df.select_dtypes(include=['object']).columns
-df = pd.get_dummies(df, columns=categorical_columns, drop_first=True)
+# Fetch data from MongoDB and convert it to a DataFrame
+data = pd.DataFrame(list(collection.find()))
 
-df.fillna(df.mean(), inplace=True)
+# Preprocess the data
+data.fillna(data.mean(), inplace=True)
 
-# Selezioniamo solo le colonne rilevanti
+# One-hot encode categorical columns
+data = pd.get_dummies(data, drop_first=True)
+
+# Select relevant columns
 selected_columns = [
-    'hotel', 'meal', 'arrival_date_year', 'arrival_date_month', 'is_high_season',
-    'is_canceled', 'season',
-    'adults', 'children', 'babies', 'total_guests', 'adr', 'is_repeated_guest'
+    'hotel', 'meal', 'arrival_date_month', 'is_canceled', 'season',
+    'adults', 'children', 'babies', 'total_guests', 'adr', 'lead_time'
 ]
 
-# Prepariamo i dati
-X = df[selected_columns]
-y = df['adr']
+# Prepare the data
+X = data[selected_columns]
+y = data['adr']
 
-# Dividiamo i dati in set di addestramento e test
+# Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-# Addestramento del modello di regressione lineare
+# Train a linear regression model
 model = LinearRegression()
 model.fit(X_train, y_train)
 
 # Streamlit UI
 st.title("🎯 Predizione del Prezzo Medio Giornaliero (ADR)")
-st.write(""" 
-Questa applicazione utilizza un modello di **regressione lineare** per predire il prezzo medio giornaliero di una prenotazione (**ADR**) 
+st.write("""
+Questa applicazione utilizza un modello di **regressione lineare** per predire il prezzo medio giornaliero di una prenotazione (**ADR**)
 basandosi su diversi parametri.
 """)
 
-# Input utente
+# User input
 st.sidebar.header("📊 Inserisci i parametri")
 adults = st.sidebar.number_input("Numero di Adulti (max 4)", min_value=1, max_value=4, value=2)
 children = st.sidebar.number_input("Numero di Bambini (max 5)", min_value=0, max_value=5, value=0)
 lead_time = st.sidebar.number_input("Lead Time (giorni prima della prenotazione)", min_value=0, max_value=1000, value=30)
 stay_duration = st.sidebar.number_input("Durata del Soggiorno (notti totali)", min_value=1, max_value=20, value=5)
-hotel_type = st.sidebar.selectbox(
-    "Tipo di Hotel", ["City Hotel", "Resort Hotel"]
-)
+hotel_type = st.sidebar.selectbox("Tipo di Hotel", ["City Hotel", "Resort Hotel"])
 
-# Aggiungere il tipo di hotel come variabile numerica
+# Encode hotel type as numeric
 hotel_encoding = {
     "City Hotel": [0],
     "Resort Hotel": [1]
 }[hotel_type]
 
-# Predizione
+# Prediction
 user_input = pd.DataFrame({
     'adults': [adults],
     'children': [children],
@@ -76,7 +77,7 @@ user_input = pd.DataFrame({
 
 prediction = model.predict(user_input)[0]
 
-# Risultati
+# Results
 st.subheader("🎉 Risultato della Predizione")
 st.markdown(
     f"""
@@ -88,7 +89,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Metriche del modello
+# Model metrics
 y_pred = model.predict(X_test)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
@@ -104,26 +105,23 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Grafico interattivo con Plotly
+# Interactive plot with Plotly
 st.subheader("📊 Distribuzione delle Predizioni (Grafico Interattivo)")
 fig = px.histogram(y_pred, nbins=20, title="Distribuzione delle Predizioni ADR", labels={"value": "ADR Predetto"})
 fig.add_vline(x=prediction, line=dict(dash="dash", color="red"), annotation_text="Valore Utente", annotation_position="top right")
 st.plotly_chart(fig)
 
-# Funzione per salvare il grafico come immagine con miglioramenti estetici
+# Function to save plot image
 def save_plot_image():
-    # Crea la directory se non esiste
     plot_dir = 'C:\\tmp'
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
-    
+
     plot_image_path = os.path.join(plot_dir, 'prediction_plot.png')
 
-    # Crea il grafico con un tema migliorato
     plt.figure(figsize=(10, 6))
     sns.set(style="whitegrid")
     sns.histplot(y_pred, bins=20, color='royalblue', label='Predizioni ADR', kde=False)
-    # Curva di densità KDE con il colore arancione
     sns.kdeplot(y_pred, color='orange', linewidth=2, label='Curva di densità KDE delle Predizioni ADR')
     plt.axvline(prediction, color='red', linestyle='--', label=f'Valore Utente ({prediction:.2f} €)', linewidth=2)
     plt.title('Distribuzione delle Predizioni ADR con il Valore Utente', fontsize=16, fontweight='bold', color='darkblue')
@@ -131,42 +129,37 @@ def save_plot_image():
     plt.ylabel('Frequenza', fontsize=14)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(plot_image_path)  # Salva direttamente l'immagine come file PNG
+    plt.savefig(plot_image_path)
     plt.close()
-    
+
     return plot_image_path
 
-# Funzione per generare il PDF
+# Function to create PDF
 def create_pdf(prediction, mae, r2, plot_image):
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=letter)
-    
-    # Titolo del documento
+
     c.setFont("Helvetica-Bold", 16)
     c.drawString(72, 750, "📊 Report Predizione ADR")
-    
-    # Corpo del documento
+
     c.setFont("Helvetica", 12)
     c.drawString(72, 730, f"Prezzo Medio Giornaliero Predetto (ADR): {prediction:.2f} €")
     c.drawString(72, 710, f"Errore Medio Assoluto (MAE): {mae:.2f}")
     c.drawString(72, 690, f"Coefficiente di Determinazione (R²): {r2:.2f}")
-    
-    # Aggiungi il grafico nel PDF
-    c.drawImage(plot_image, 72, 400, width=450, height=250)  # Posiziona il grafico nel PDF
-    
-    # Salvataggio del PDF
+
+    c.drawImage(plot_image, 72, 400, width=450, height=250)
+
     c.showPage()
     c.save()
-    
+
     buf.seek(0)
     return buf
 
-# Bottone per scaricare il PDF
+# Button to download the PDF
 st.subheader("📥 Scarica il Report PDF")
 plot_image = save_plot_image()
 pdf_buffer = create_pdf(prediction, mae, r2, plot_image)
 
-# Crea il link per scaricare il PDF
 st.download_button(
     label="Scarica il Report PDF",
     data=pdf_buffer,
