@@ -4,17 +4,15 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
-import plotly.express as px  # Importiamo Plotly per il grafico interattivo
+import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
 from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 import os
 
 # Simuliamo i dati (sostituire con il vostro dataset)
-np.random.seed(0)
 data = pd.read_csv('hotel_bookings.csv')
 df = pd.DataFrame(data)
 
@@ -48,6 +46,9 @@ Questa applicazione utilizza un modello di **regressione lineare** per predire i
 basandosi su diversi parametri.
 """)
 
+# Spazio tra le sezioni
+st.markdown("---")
+
 # Input utente
 st.sidebar.header("📊 Inserisci i parametri")
 adults = st.sidebar.number_input("Numero di Adulti (max 4)", min_value=1, max_value=4, value=2)
@@ -63,6 +64,13 @@ hotel_encoding = {
     "City Hotel": [0],
     "Resort Hotel": [1]
 }[hotel_type]
+
+# Selezione del mese
+st.sidebar.header("📅 Seleziona il mese")
+season_month = st.sidebar.selectbox(
+    "Mese di arrivo",
+    ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
+)
 
 # Predizione
 user_input = pd.DataFrame({
@@ -82,29 +90,43 @@ st.markdown(
     <div style="background-color:#f0f9ff; padding:10px; border-radius:10px; border: 2px solid #2196f3;">
         <h2 style="color:#2196f3; text-align:center;">Prezzo Medio Giornaliero Predetto (ADR): <b>{prediction:.2f} €</b></h2>
         <p><i>Tipo di Hotel: {hotel_type}</i></p>
+        <p><i>Mese Selezionato: {season_month}</i></p>
     </div>
     """,
     unsafe_allow_html=True
 )
+
+# Spazio tra le sezioni
+st.markdown("---")
 
 # Metriche del modello
 y_pred = model.predict(X_test)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
 
-st.subheader("📈 Metriche del Modello")
-st.markdown(
-    f"""
-    <div style="background-color:#e8f5e9; padding:10px; border-radius:10px; border: 2px solid #43a047;">
-        <p><b>Errore Medio Assoluto (MAE):</b> {mae:.2f}</p>
-        <p><b>Coefficiente di Determinazione (R²):</b> {r2:.2f}</p>
-    </div>
-    """,
-    unsafe_allow_html=True
+st.subheader("⚙️ Metriche del Modello")
+st.write(f"Errore Medio Assoluto (MAE): {mae:.2f}")
+st.write(f"Coefficiente di Determinazione (R²): {r2:.2f}")
+
+# Spazio tra le sezioni
+st.markdown("---")
+
+# Grafico a torta sulle tipologie di hotel
+st.subheader("🌈 Distribuzione delle Tipologie di Hotel")
+hotel_counts = df['hotel'].value_counts()
+fig_pie = px.pie(
+    values=hotel_counts.values,
+    names=hotel_counts.index,
+    title="Distribuzione delle Prenotazioni per Tipologia di Hotel",
+    color_discrete_sequence=px.colors.sequential.RdBu
 )
+st.plotly_chart(fig_pie)
+
+# Spazio tra le sezioni
+st.markdown("---")
 
 # Grafico interattivo con Plotly
-st.subheader("📊 Distribuzione delle Predizioni (Grafico Interattivo)")
+st.subheader("🔄 Distribuzione delle Predizioni (Grafico Interattivo)")
 fig = px.histogram(y_pred, nbins=20, title="Distribuzione delle Predizioni ADR", labels={"value": "ADR Predetto"})
 fig.add_vline(x=prediction, line=dict(dash="dash", color="red"), annotation_text="Valore Utente", annotation_position="top right")
 st.plotly_chart(fig)
@@ -122,7 +144,6 @@ def save_plot_image():
     plt.figure(figsize=(10, 6))
     sns.set(style="whitegrid")
     sns.histplot(y_pred, bins=20, color='royalblue', label='Predizioni ADR', kde=False)
-    # Curva di densità KDE con il colore arancione
     sns.kdeplot(y_pred, color='orange', linewidth=2, label='Curva di densità KDE delle Predizioni ADR')
     plt.axvline(prediction, color='red', linestyle='--', label=f'Valore Utente ({prediction:.2f} €)', linewidth=2)
     plt.title('Distribuzione delle Predizioni ADR con il Valore Utente', fontsize=16, fontweight='bold', color='darkblue')
@@ -130,7 +151,7 @@ def save_plot_image():
     plt.ylabel('Frequenza', fontsize=14)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(plot_image_path)  # Salva direttamente l'immagine come file PNG
+    plt.savefig(plot_image_path)
     plt.close()
     
     return plot_image_path
@@ -151,7 +172,7 @@ def create_pdf(prediction, mae, r2, plot_image):
     c.drawString(72, 690, f"Coefficiente di Determinazione (R²): {r2:.2f}")
     
     # Aggiungi il grafico nel PDF
-    c.drawImage(plot_image, 72, 400, width=450, height=250)  # Posiziona il grafico nel PDF
+    c.drawImage(plot_image, 72, 400, width=450, height=250)
     
     # Salvataggio del PDF
     c.showPage()
@@ -159,11 +180,6 @@ def create_pdf(prediction, mae, r2, plot_image):
     
     buf.seek(0)
     return buf
-
-# Bottone per scaricare il PDF
-st.subheader("📥 Scarica il Report PDF")
-plot_image = save_plot_image()
-pdf_buffer = create_pdf(prediction, mae, r2, plot_image)
 
 # Crea il link per scaricare il PDF
 st.download_button(
