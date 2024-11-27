@@ -24,7 +24,8 @@ hotel_types = pd.get_dummies(df['hotel'], drop_first=True)  # Dropping the first
 df = pd.concat([df, hotel_types], axis=1)
 
 # Prepariamo i dati
-X = df[['adults', 'children', 'lead_time', 'stay_duration', 'Resort Hotel']]
+X = df[['adults', 'children', 'babies', 'lead_time', 'stay_duration', 'hotel', 
+        'season', 'is_family', 'country_name']]
 y = df['adr']
 
 X = X.copy()
@@ -69,7 +70,8 @@ hotel_encoding = {
 st.sidebar.header("📅 Seleziona il mese")
 season_month = st.sidebar.selectbox(
     "Mese di arrivo",
-    ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
+    ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio",
+     "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 )
 
 # Predizione
@@ -103,10 +105,6 @@ st.markdown("---")
 y_pred = model.predict(X_test)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
-
-st.subheader("⚙️ Metriche del Modello")
-st.write(f"Errore Medio Assoluto (MAE): {mae:.2f}")
-st.write(f"Coefficiente di Determinazione (R²): {r2:.2f}")
 
 # Spazio tra le sezioni
 st.markdown("---")
