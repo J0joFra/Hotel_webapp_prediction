@@ -18,16 +18,15 @@ np.random.seed(0)
 # Caricare dataset
 df = pd.read_csv('Hotel.csv')
 
-# Codifica della colonna 'hotel' (one-hot encoding)
-hotel_types = pd.get_dummies(df['hotel'], drop_first=True)  # Dropping the first column to avoid multicollinearity
-df = pd.concat([df, hotel_types], axis=1)
+# Codifica one-hot per tutte le colonne categoriche del DataFrame
+categorical_columns = df.select_dtypes(include=['object']).columns
+df = pd.get_dummies(df, columns=categorical_columns, drop_first=True)
+
+df.fillna(df.mean(), inplace=True)
 
 # Prepariamo i dati
 X = df.drop(columns=['adr'])
-X.fillna(X.mean(), inplace=True)
-
 y = df['adr']
-y.fillna(y.mean(), inplace=True)
 
 # Dividiamo i dati in set di addestramento e test
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
