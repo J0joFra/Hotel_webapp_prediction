@@ -24,8 +24,15 @@ df = pd.get_dummies(df, columns=categorical_columns, drop_first=True)
 
 df.fillna(df.mean(), inplace=True)
 
+# Selezioniamo solo le colonne rilevanti
+selected_columns = [
+    'hotel', 'meal', 'arrival_date_year', 'arrival_date_month', 'is_high_season',
+    'is_canceled', 'previous_cancellations', 'previous_bookings_not_canceled',
+    'adults', 'children', 'babies', 'total_guests', 'adr', 'is_repeated_guest'
+]
+
 # Prepariamo i dati
-X = df.drop(columns=['adr'])
+X = df[selected_columns]
 y = df['adr']
 
 # Dividiamo i dati in set di addestramento e test
