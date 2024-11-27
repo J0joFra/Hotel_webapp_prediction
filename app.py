@@ -180,3 +180,30 @@ st.download_button(
     file_name="report_predizione_adr.pdf",
     mime="application/pdf"
 )
+
+# Aggiungere una colonna "season" al dataset
+def map_season(month):
+    if month in ['December', 'January', 'February']:
+        return 'Inverno'
+    elif month in ['March', 'April', 'May']:
+        return 'Primavera'
+    elif month in ['June', 'July', 'August']:
+        return 'Estate'
+    else:
+        return 'Autunno'
+
+df['season'] = df['arrival_date_month'].map(map_season)
+
+# Sidebar per selezionare la stagione
+st.sidebar.header("🌦️ Filtra per Stagione")
+season_filter = st.sidebar.selectbox(
+    "Seleziona una stagione", 
+    options=['Tutte', 'Inverno', 'Primavera', 'Estate', 'Autunno']
+)
+
+# Filtrare il dataset in base alla stagione selezionata
+if season_filter != 'Tutte':
+    df = df[df['season'] == season_filter]
+
+# (Resto del codice rimane invariato)
+
