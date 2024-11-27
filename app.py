@@ -79,6 +79,15 @@ user_input = pd.DataFrame({
     'Resort Hotel': [hotel_encoding[0]]
 })
 
+# Aggiungere tutte le colonne mancanti
+for col in X.columns:
+    if col not in user_input.columns:
+        user_input[col] = 0
+
+# Riordinare le colonne
+user_input = user_input[X.columns]
+
+# Predire il valore
 prediction = model.predict(user_input)[0]
 
 # Risultati
