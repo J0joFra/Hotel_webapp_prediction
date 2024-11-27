@@ -13,16 +13,20 @@ from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 import os
 
-df = pd.read_csv('Hotel.csv')
+# Simuliamo i dati (sostituire con il vostro dataset)
+np.random.seed(0)
+data = pd.read_csv('hotel_bookings.csv')
+df = pd.DataFrame(data)
 
-# Preprocess the df
-df.fillna(df.mean(), inplace=True)
+# Aggiungiamo la colonna "stay_duration"
+df['stay_duration'] = df['stays_in_week_nights'] + df['stays_in_weekend_nights']
 
-# One-hot encode categorical columns
-df = pd.get_dummies(df, drop_first=True)
+# Codifica della colonna 'hotel' (one-hot encoding)
+hotel_types = pd.get_dummies(df['hotel'], drop_first=True)  # Dropping the first column to avoid multicollinearity
+df = pd.concat([df, hotel_types], axis=1)
 
 # Prepariamo i dati
-X = df.drop()
+X = df[['adults', 'children', 'lead_time', 'stay_duration', 'Resort Hotel']]
 y = df['adr']
 
 X = X.copy()
@@ -61,7 +65,7 @@ hotel_encoding = {
 }[hotel_type]
 
 # Predizione
-user_input = pd.dfFrame({
+user_input = pd.DataFrame({
     'adults': [adults],
     'children': [children],
     'lead_time': [lead_time],
@@ -164,7 +168,7 @@ pdf_buffer = create_pdf(prediction, mae, r2, plot_image)
 # Crea il link per scaricare il PDF
 st.download_button(
     label="Scarica il Report PDF",
-    df=pdf_buffer,
+    data=pdf_buffer,
     file_name="report_predizione_adr.pdf",
     mime="application/pdf"
 )
