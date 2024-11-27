@@ -16,18 +16,38 @@ import os
 # Caricare dataset
 df_csv = pd.read_csv('hotel_bookings.csv')
 
-# Aggiungere una colonna "season" al dataset
+# Funzione per mappare i mesi alle stagioni
 def map_season(month):
     if month in ['December', 'January', 'February']:
-        return 'Inverno'
+        return 'Winter'
     elif month in ['March', 'April', 'May']:
-        return 'Primavera'
+        return 'Spring'
     elif month in ['June', 'July', 'August']:
-        return 'Estate'
+        return 'Summer'
+    elif month in ['September', 'October', 'November']:
+        return 'Autumn'
     else:
-        return 'Autunno'
+        return None
 
-df_csv['season'] = df_csv['arrival_date_month'].map(map_season)
+# Verifica e conversione di arrival_date_month
+if 'arrival_date_month' in df.columns:
+    months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+    df['arrival_date_month'] = df['arrival_date_month'].apply(lambda x: months[int(x) - 1] if str(x).isdigit() else x)
+    df['season'] = df['arrival_date_month'].map(map_season)
+else:
+    st.error("La colonna 'arrival_date_month' non esiste nel dataset.")
+    st.stop()
+
+# Filtro per stagione
+season_filter = st.sidebar.selectbox("Seleziona la stagione", ['Winter', 'Spring', 'Summer', 'Autumn'])
+if 'season' in df.columns:
+    df = df[df['season'] == season_filter]
+else:
+    st.error("La colonna 'season' non è stata creata correttamente.")
+    st.stop()
 
 # Simuliamo i dati (sostituire con il vostro dataset)
 np.random.seed(0)
