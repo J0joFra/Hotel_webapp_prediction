@@ -18,8 +18,7 @@ data = pd.read_csv('Hotel.csv')
 df = pd.DataFrame(data)
 
 # Prepariamo i dati
-X = df[['adults', 'children', 'babies', 'lead_time', 'stay_duration', 'hotel', 
-        'season', 'country_name']]
+X = df.drop(columns=['adr'])
 y = df['adr']
 
 # Gestione delle colonne categoriche
@@ -43,9 +42,6 @@ st.write("""
 Questa applicazione utilizza un modello di **regressione lineare** per predire il prezzo medio giornaliero di una prenotazione (**ADR**) 
 basandosi su diversi parametri.
 """)
-
-# Spazio tra le sezioni
-st.markdown("---")
 
 # Input utente
 st.sidebar.header("📊 Inserisci i parametri")
@@ -104,16 +100,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Spazio tra le sezioni
-st.markdown("---")
-
 # Metriche del modello
 y_pred = model.predict(X_test)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
-
-# Spazio tra le sezioni
-st.markdown("---")
 
 # Grafico a torta sulle tipologie di hotel
 st.subheader("🌈 Distribuzione delle Tipologie di Hotel")
@@ -126,58 +116,9 @@ fig_pie = px.pie(
 )
 st.plotly_chart(fig_pie)
 
-# Spazio tra le sezioni
-st.markdown("---")
-
 # Grafico interattivo con Plotly
 st.subheader("🔄 Distribuzione delle Predizioni (Grafico Interattivo)")
 fig = px.histogram(y_pred, nbins=20, title="Distribuzione delle Predizioni ADR", labels={"value": "ADR Predetto"})
 fig.add_vline(x=prediction, line=dict(dash="dash", color="red"), annotation_text="Valore Utente", annotation_position="top right")
 st.plotly_chart(fig)
 
-
-import tempfile
-
-# Funzione per creare il PDF e salvarlo in un file temporaneo
-def create_pdf(prediction, mae, r2, plot_image):
-    buf = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=letter)
-    
-    # Titolo del documento
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(72, 750, "📊 Report Predizione ADR")
-    
-    # Corpo del documento
-    c.setFont("Helvetica", 12)
-    c.drawString(72, 730, f"Prezzo Medio Giornaliero Predetto (ADR): {prediction:.2f} €")
-    c.drawString(72, 710, f"Errore Medio Assoluto (MAE): {mae:.2f}")
-    c.drawString(72, 690, f"Coefficiente di Determinazione (R²): {r2:.2f}")
-    
-    # Aggiungi il grafico nel PDF
-    c.drawImage(plot_image, 72, 400, width=450, height=250)
-    
-    # Salvataggio del PDF
-    c.showPage()
-    c.save()
-    
-    buf.seek(0)
-    return buf
-
-# Salvataggio del PDF in un file temporaneo
-pdf_buffer = create_pdf(prediction, mae, r2, plot_image_path)
-
-# Scrittura del buffer in un file temporaneo
-with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-    tmp_file.write(pdf_buffer.getvalue())
-    tmp_file_path = tmp_file.name
-
-# Crea il bottone per scaricare il PDF
-if os.path.exists(tmp_file_path):
-    st.download_button(
-        label="Scarica il Report PDF",
-        data=open(tmp_file_path, "rb"),
-        file_name="report_predizione_adr.pdf",
-        mime="application/pdf"
-    )
-else:
-    st.error("Errore nella creazione del PDF. Per favore, riprova.")
